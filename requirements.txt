@@ -1,0 +1,7 @@
+Django==5.1.4
+requests==2.33.1
+reportlab==4.4.10
+django-jazzmin==3.0.1
+
+# Uncomment the line below if you switch USE_MYSQL=True in your .env
+# mysqlclient==2.2.4
