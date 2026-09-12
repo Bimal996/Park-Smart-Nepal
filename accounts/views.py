@@ -1,11 +1,11 @@
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login,update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
-from .forms import LoginForm, ProfileForm, SignUpForm, UserUpdateForm
+from .forms import LoginForm, ProfileForm, SignUpForm, UserUpdateForm,SPSPasswordChangeForm
 from .models import UserProfile
 
 
@@ -51,3 +51,16 @@ def profile_view(request):
     return render(request, "accounts/profile.html", {
         "user_form": user_form, "profile_form": profile_form,
     })
+
+@login_required
+def change_password_view(request):
+    if request.method == "POST":
+        form = SPSPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # keeps the user logged in
+            messages.success(request, "Your password has been changed.")
+            return redirect("accounts:profile")
+    else:
+        form = SPSPasswordChangeForm(request.user)
+    return render(request, "accounts/change_password.html", {"form": form})

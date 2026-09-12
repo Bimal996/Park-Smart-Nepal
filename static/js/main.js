@@ -98,4 +98,22 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedSlot.addEventListener("change", syncSlotChoices);
     syncSlotChoices();
   }
+
+  document.querySelectorAll(".password-toggle-btn").forEach(function (btn) {
+    btn.setAttribute("aria-pressed", "false");
+    btn.setAttribute("aria-label", "Show password");
+
+    btn.addEventListener("click", function () {
+      const wrap = btn.closest(".password-field-wrap");
+      const input = wrap.querySelector("input");
+      const nowVisible = input.type === "password";
+
+      input.type = nowVisible ? "text" : "password";
+      btn.classList.toggle("is-visible", nowVisible);
+      btn.setAttribute("aria-pressed", nowVisible ? "true" : "false");
+      btn.setAttribute("aria-label", nowVisible ? "Hide password" : "Show password");
+
+      input.focus();
+    });
+  });
 });

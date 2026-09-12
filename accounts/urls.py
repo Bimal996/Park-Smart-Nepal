@@ -10,4 +10,5 @@ urlpatterns = [
     path("login/", views.SPSLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("profile/", views.profile_view, name="profile"),
+    path("password/", views.change_password_view, name="change_password"),
 ]
