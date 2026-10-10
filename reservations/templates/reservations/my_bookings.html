@@ -1,13 +1,33 @@
-{% extends "base.html" %} {% block title %}My Bookings — {{ site.SITE_NAME }}{%endblock %} {% block content %}
+{% extends "base.html" %}
+
+{% block title %}My Bookings — {{ site.SITE_NAME }}{% endblock %}
+
+{% block content %}
 
 <section class="section">
   <div class="container-sps">
     <div class="section-eyebrow">Account</div>
     <h2 class="mb-4">My bookings</h2>
 
+    <!-- Alerts: expiring soon / overstay detected -->
+    {% for n in notifications %}
+    <div class="sps-alert warning mb-3" style="position: static; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start">
+      <div>
+        <strong>&#9888; {{ n.title }}</strong><br />
+        {{ n.message }}
+      </div>
+      <form method="post" action="{% url 'reservations:dismiss_notification' n.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-sps-outline" style="padding: 4px 10px; font-size: 0.78rem">Dismiss</button>
+      </form>
+    </div>
+    {% endfor %}
+
     {% if reservations %}
     <div style="display: flex; flex-direction: column; gap: 16px">
+
       {% for r in reservations %}
+
       <div
         class="sps-card booking-row"
         style="
@@ -17,62 +37,107 @@
           align-items: center;
         "
       >
+
+        <!-- Parking Lot and Reference -->
         <div>
           <div style="font-weight: 600">{{ r.lot.name }}</div>
           <div style="color: var(--ink-600); font-size: 0.86rem">
-            Ref: {{ r.reference }} &bull; Slot {{ r.slot.slot_number|default:"—"
-            }}
+            Ref: {{ r.reference }} &bull; Slot {{ r.slot.slot_number|default:"—" }}
           </div>
         </div>
+
+        <!-- Booking Time -->
         <div style="font-size: 0.88rem; color: var(--ink-700)">
           {{ r.start_time|date:"d M, g:i A" }}<br />
-          <span style="color: var(--ink-400)"
-            >to {{ r.end_time|date:"d M, g:i A" }}</span
-          >
+          <span style="color: var(--ink-400)">to {{ r.end_time|date:"d M, g:i A" }}</span>
+          {% if r.actual_exit_time %}
+          <br /><span style="color: var(--ink-600)">Exited {{ r.actual_exit_time|date:"d M, g:i A" }}</span>
+          {% endif %}
         </div>
+
+        <!-- Amount and Status -->
         <div style="font-size: 0.9rem">
           <div style="font-weight: 600">Rs. {{ r.total_amount }}</div>
+
           {% if r.status == "pending_payment" %}
           <span class="badge-status badge-pending">Pending</span>
           {% elif r.status == "confirmed" %}
-          <span class="badge-status badge-confirmed">Confirmed</span>
+            {% if r.is_checked_in %}
+            <span class="badge-status badge-checked-in">Checked in</span>
+            {% else %}
+            <span class="badge-status badge-confirmed">Confirmed</span>
+            {% endif %}
+          {% elif r.status == "overstay" %}
+          <span class="badge-status badge-overstay">Overstay</span>
           {% elif r.status == "completed" %}
           <span class="badge-status badge-completed">Completed</span>
+          {% elif r.status == "no_show" %}
+          <span class="badge-status badge-no_show">No show</span>
           {% else %}
           <span class="badge-status badge-cancelled">Cancelled</span>
           {% endif %}
+
+          {% if r.status == "overstay" or r.fine_amount > 0 %}
+          <div class="fine-panel">
+            Overstay: {{ r.overstay_minutes }} min<br />
+            Fine: Rs. {{ r.fine_amount }}{% if r.fine_paid %} (paid){% endif %}
+          </div>
+          {% endif %}
         </div>
-        <div style="display: flex; gap: 8px; justify-content: flex-end">
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+
+          {% if r.can_check_in %}
+          <form method="post" action="{% url 'reservations:check_in' r.reference %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-sps-amber" style="padding: 8px 14px; font-size: 0.85rem">Check in</button>
+          </form>
+          {% endif %}
+
+          {% if r.is_in_use %}
+          <form method="post" action="{% url 'reservations:exit_parking' r.reference %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-sps-amber" style="padding: 8px 14px; font-size: 0.85rem">Exit parking</button>
+          </form>
+          {% endif %}
+
+          {% if r.fine_due and r.status == "completed" %}
+          <a href="{% url 'reservations:pay_fine' r.reference %}" class="btn-sps-amber" style="padding: 8px 14px; font-size: 0.85rem">Pay fine</a>
+          {% endif %}
+
           {% if r.payment.status == "success" %}
           <a
             href="{% url 'payments:receipt_pdf' r.reference %}"
             class="btn-sps-outline"
             style="padding: 8px 14px; font-size: 0.85rem"
             title="Download PDF receipt"
-            >Receipt</a
-          >
+          >Receipt</a>
           {% endif %}
+
           <a
             href="{% url 'reservations:detail' r.reference %}"
             class="btn-sps-amber"
             style="padding: 8px 14px; font-size: 0.85rem"
-            >View</a
-          >
+          >View</a>
+
         </div>
       </div>
+
       {% endfor %}
+
     </div>
+
     {% else %}
+
     <div class="sps-card text-center" style="max-width: 440px">
       <h3>No bookings yet</h3>
-      <p style="color: var(--ink-600)">
-        Find a parking lot and reserve your first slot.
-      </p>
-      <a href="{% url 'parking:lot_list' %}" class="btn-sps-amber"
-        >Find parking</a
-      >
+      <p style="color: var(--ink-600)">Find a parking lot and reserve your first slot.</p>
+      <a href="{% url 'parking:lot_list' %}" class="btn-sps-amber">Find parking</a>
     </div>
+
     {% endif %}
+
   </div>
 </section>
 

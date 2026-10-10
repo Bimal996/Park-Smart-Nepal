@@ -165,3 +165,41 @@ After running `createsuperuser` you can log into `/admin/` with the
 credentials you set. To try the *customer-facing* flow, just sign up a
 normal account from `/accounts/signup/` — it's a separate flow from the
 Django admin account.
+
+<!-- For Esewa Payment System -->
+Your project uses eSewa's test (sandbox) mode, with the merchant code EPAYTEST in your settings. So you log in with eSewa's public test account, not a real one, and no real money moves.
+
+Credentials to enter on the eSewa login page:
+
+eSewa ID: 9806800001, 9806800002, 'Workable no = 9806800003', 9806800004 or 9806800005 (any one)
+esewa
+Password: Nepal@123
+esewa
+MPIN (the PIN step): 1122
+esewa
+Verification token / OTP: 123456
+esewa
+
+That is the current list on eSewa's developer "Try" page.
+
+If those IDs are rejected, eSewa's older docs list a different set of test numbers. The older ePay page gives the eSewa IDs 9711111111 to 9711111114, password Nepal@123, MPIN 1122 and token 123456. One older page instead lists 9711111111/2/3 with password Test@123. Try these in order:
+Esewa
+Esewa
+
+9806800001 with Nepal@123
+9711111111 with Nepal@123
+9711111111 with Test@123
+
+Steps in your site:
+
+Choose eSewa on the payment page and click Pay.
+On the eSewa page, enter the eSewa ID and password.
+Enter the MPIN 1122 and the token 123456.
+Confirm the payment. You are sent back to your site, and the booking becomes Confirmed.
+
+If the payment still doesn't succeed, check these in SPS_SETTINGS:
+
+ESEWA_MERCHANT_CODE must be EPAYTEST.
+The test secret key from eSewa's docs is 8gBm/:&EnhH.1/q. Your project should use the same key for signing
+Esewa
+ESEWA_SUCCESS_URL and ESEWA_FAILURE_URL are empty in your settings. Your code probably builds the return URLs itself, but if the redirect fails, send me your payments/gateways.py and I'll check the.

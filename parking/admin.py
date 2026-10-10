@@ -1,25 +1,27 @@
 from django.contrib import admin
 
+from spsproject.admin_utils import SafeAdminMixin
 from .models import ParkingLot, ParkingSlot
 
 
 class ParkingSlotInline(admin.TabularInline):
     model = ParkingSlot
-    extra = 1
+    extra = 0
+    show_change_link = True
 
 
 @admin.register(ParkingLot)
-class ParkingLotAdmin(admin.ModelAdmin):
-    list_display = ("name", "city", "total_slots", "available_slots_count", "is_active")
-    list_filter = ("city", "is_active", "has_ev_charging", "has_covered_parking")
-    search_fields = ("name", "address")
-    prepopulated_fields = {"slug": ("name",)}
+class ParkingLotAdmin(SafeAdminMixin, admin.ModelAdmin):
+    list_display = ("name", "city", "address", "total_slots", "hourly_rate", "is_active")
+    list_filter = ("city", "is_active")
+    search_fields = ("name", "city", "address")
+    ordering = ("name",)
     inlines = [ParkingSlotInline]
 
 
 @admin.register(ParkingSlot)
-class ParkingSlotAdmin(admin.ModelAdmin):
-    list_display = ("lot", "slot_number", "vehicle_type", "floor", "status")
-    list_filter = ("lot", "vehicle_type", "status")
-    search_fields = ("slot_number",)
-    list_editable = ("status",)
+class ParkingSlotAdmin(SafeAdminMixin, admin.ModelAdmin):
+    list_display = ("slot_number", "lot", "slot_type", "status_badge")
+    list_filter = ("lot", "slot_type", "status")
+    search_fields = ("slot_number", "lot__name", "lot__city")
+    ordering = ("lot", "slot_number")

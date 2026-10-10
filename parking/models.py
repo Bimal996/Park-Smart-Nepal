@@ -4,7 +4,10 @@ from django.urls import reverse
 
 class ParkingLot(models.Model):
     CITY_CHOICES = [
-        ("dhangadhi", "Dhangadhi"),
+        ("Dhangadhi", "Dhangadhi"),
+        ("Kathmandu", "Kathmandu"),
+        ("Lalitpur", "Lalitpur"),
+        ("Bhaktapur", "Bhaktapur"),
     ]
 
     name = models.CharField(max_length=120)
@@ -45,6 +48,14 @@ class ParkingLot(models.Model):
         return self.slots.count()
 
     @property
+    def emergency_slots(self):
+        return self.slots.filter(slot_type="emergency")
+
+    @property
+    def vip_slots(self):
+       return self.slots.filter(slot_type="vip")
+   
+    @property
     def available_slots_count(self):
         return self.slots.filter(status="available").count()
 
@@ -72,7 +83,23 @@ class ParkingSlot(models.Model):
         ("occupied", "Occupied"),
         ("reserved", "Reserved"),
         ("maintenance", "Under Maintenance"),
+        ("reserved", "Reserved"),
+        ("overstay", "Overstay"),          # <-- add this line
+        ("maintenance", "Under Maintenance"),
     ]
+    
+    SLOT_TYPE_CHOICES = [
+        ('regular', 'Regular'),
+        ('vip', 'VIP'),
+        ('emergency', 'Emergency'),
+    ]
+    
+        
+    slot_type = models.CharField(
+        max_length=20,
+        choices=SLOT_TYPE_CHOICES,
+        default='regular'
+    )
 
     lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name="slots")
     slot_number = models.CharField(max_length=10, help_text="e.g. A1, B12")

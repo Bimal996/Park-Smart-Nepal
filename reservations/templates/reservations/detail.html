@@ -29,8 +29,12 @@
         <span class="badge-status badge-pending">Pending payment</span>
         {% elif reservation.status == "confirmed" %}
         <span class="badge-status badge-confirmed">Confirmed</span>
+        {% elif reservation.status == "overstay" %}
+        <span class="badge-status badge-overstay">Overstay</span>
         {% elif reservation.status == "completed" %}
         <span class="badge-status badge-completed">Completed</span>
+        {% elif reservation.status == "no_show" %}
+        <span class="badge-status badge-no_show">No Show</span>
         {% else %}
         <span class="badge-status badge-cancelled">Cancelled</span>
         {% endif %}
@@ -40,8 +44,7 @@
         <div class="col-6" style="font-size: 0.9rem">
           <div style="color: var(--ink-600)">Vehicle</div>
           <div style="font-weight: 600">
-            {{ reservation.vehicle_number }} ({{
-            reservation.get_vehicle_type_display }})
+            {{ reservation.vehicle_number }} ({{ reservation.get_vehicle_type_display }})
           </div>
         </div>
         <div class="col-6" style="font-size: 0.9rem">
@@ -96,27 +99,81 @@
           Cancel reservation
         </button>
       </form>
+
       {% elif reservation.status == "confirmed" %}
+      {% if reservation.is_checked_in %}
       <div class="sps-alert success" style="position: static">
-        You're all set — drive to slot {{
-        reservation.slot.slot_number|default:"—" }} at {{ reservation.lot.name
-        }}.
+        Checked in at {{ reservation.actual_entry_time|date:"g:i A" }}. Please exit before {{ reservation.end_time|date:"g:i A" }} to avoid a fine.
       </div>
+      {% else %}
+      <div class="sps-alert success" style="position: static">
+        You're all set — drive to slot {{ reservation.slot.slot_number|default:"—" }} at {{ reservation.lot.name }}.
+      </div>
+      {% endif %}
+
+      {% if reservation.can_check_in %}
+      <form method="post" action="{% url 'reservations:check_in' reservation.reference %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-sps-amber btn-block-amber mt-3">I've arrived &mdash; check in</button>
+      </form>
+      {% endif %}
+      {% if reservation.is_in_use %}
+      <form method="post" action="{% url 'reservations:exit_parking' reservation.reference %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-sps-amber btn-block-amber mt-3">Exit parking</button>
+      </form>
+      {% endif %}
+
       {% if reservation.payment.status == "success" %}
       <a
         href="{% url 'payments:receipt_pdf' reservation.reference %}"
-        class="btn-sps-amber btn-block-amber mt-3"
+        class="btn-sps-outline btn-block-amber mt-3"
       >
         &#8681; Download payment receipt (PDF)
       </a>
-      {% endif %} {% elif reservation.status == "completed" %} {% if
-      reservation.payment.status == "success" %}
+      {% endif %}
+
+      {% elif reservation.status == "overstay" %}
+      <div class="fine-panel" style="margin-top: 0">
+        &#9888; Overstay detected<br />
+        Booked until {{ reservation.end_time|date:"g:i A" }} &bull; Overstay: {{ reservation.overstay_minutes }} min<br />
+        Current fine: Rs. {{ reservation.fine_amount }}
+      </div>
+      <form method="post" action="{% url 'reservations:exit_parking' reservation.reference %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-sps-amber btn-block-amber mt-3">Exit parking</button>
+      </form>
+      <p style="font-size: 0.8rem; color: var(--ink-600); margin-top: 8px">
+        The fine keeps growing until you exit. You can pay it right after exiting.
+      </p>
+
+      {% elif reservation.status == "completed" %}
+      <div class="price-readout mb-3">
+        {% if reservation.actual_entry_time %}
+        <div class="row-line"><span>Entry</span><span>{{ reservation.actual_entry_time|date:"d M, g:i A" }}</span></div>
+        {% endif %}
+        <div class="row-line"><span>Exit</span><span>{{ reservation.actual_exit_time|date:"d M, g:i A" }}</span></div>
+        {% if reservation.fine_amount > 0 %}
+        <div class="row-line"><span>Overstay</span><span>{{ reservation.overstay_minutes }} min</span></div>
+        <div class="row-line">
+          <span>Final fine</span>
+          <span>Rs. {{ reservation.fine_amount }}{% if reservation.fine_paid %} (paid){% else %} (unpaid){% endif %}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% if reservation.fine_due %}
+      <a href="{% url 'reservations:pay_fine' reservation.reference %}" class="btn-sps-amber btn-block-amber mb-3">
+        Pay fine &mdash; Rs. {{ reservation.fine_amount }}
+      </a>
+      {% endif %}
+      {% if reservation.payment.status == "success" %}
       <a
         href="{% url 'payments:receipt_pdf' reservation.reference %}"
         class="btn-sps-amber btn-block-amber"
       >
         &#8681; Download payment receipt (PDF)
       </a>
+      {% endif %}
       {% endif %}
     </div>
   </div>

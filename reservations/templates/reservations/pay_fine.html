@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Pay overstay fine — {{ site.SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container-sps" style="max-width: 520px">
+    <a href="{% url 'reservations:detail' reservation.reference %}" style="color: var(--ink-600); font-size: 0.88rem">&larr; Back to booking</a>
+
+    <div class="sps-card mt-3">
+      <h2 style="font-size: 1.3rem; margin-bottom: 4px">Pay overstay fine</h2>
+      <p style="color: var(--ink-600); font-size: 0.9rem">
+        {{ reservation.lot.name }} &bull; Ref {{ reservation.reference }} &bull; Slot {{ reservation.slot.slot_number|default:"—" }}
+      </p>
+
+      <div class="price-readout mb-4">
+        <div class="row-line"><span>Booked until</span><span>{{ reservation.end_time|date:"d M, g:i A" }}</span></div>
+        <div class="row-line"><span>Overstay</span><span>{{ reservation.overstay_minutes }} min</span></div>
+        <div style="margin-top: 10px; font-size: 0.82rem; color: var(--ink-400)">Fine amount</div>
+        <div class="amount">Rs. {{ reservation.fine_amount }}</div>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn-sps-amber btn-block-amber">Confirm fine payment (demo)</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

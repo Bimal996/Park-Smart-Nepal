@@ -1,0 +1,48 @@
+{% if user.is_authenticated %}
+<div class="notif" data-notif data-feed-url="{% url 'reservations:notification_feed' %}">
+  <button
+    type="button"
+    class="notif-btn"
+    data-notif-toggle
+    aria-label="Notifications"
+    aria-haspopup="true"
+    aria-expanded="false"
+    title="Notifications"
+  >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+    <span class="notif-badge" data-notif-badge {% if not nav_unread_count %}hidden{% endif %}>{% if nav_unread_count > 9 %}9+{% else %}{{ nav_unread_count }}{% endif %}</span>
+  </button>
+
+  <div class="notif-panel" data-notif-panel hidden>
+    <div class="notif-head">
+      <strong>Notifications</strong>
+      <form method="post" action="{% url 'reservations:notifications_read_all' %}" data-notif-readall>
+        {% csrf_token %}
+        <button type="submit" class="notif-link">Mark all as read</button>
+      </form>
+    </div>
+
+    <ul class="notif-list" data-notif-list>
+      {% for n in nav_notifications %}
+      <li>
+        <a href="{% url 'reservations:notification_open' n.pk %}" class="notif-item kind-{{ n.kind }}{% if not n.is_read %} unread{% endif %}">
+          <span class="notif-dot"></span>
+          <span class="notif-body">
+            <strong>{{ n.title }}</strong>
+            <span>{{ n.message }}</span>
+            <small>{{ n.time_ago }}</small>
+          </span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="notif-empty">You're all caught up. No notifications yet.</li>
+      {% endfor %}
+    </ul>
+
+    <a href="{% url 'reservations:my_bookings' %}" class="notif-foot">View my bookings</a>
+  </div>
+</div>
+{% endif %}

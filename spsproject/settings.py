@@ -68,6 +68,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "pages.context_processors.site_settings",
+                "reservations.context_processors.notifications",
             ],
         },
     },
@@ -137,8 +138,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --------------------------------------------------------------------
 # Auth redirects
 # --------------------------------------------------------------------
-LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "pages:home"
+LOGIN_REDIRECT_URL = "pages:dashboard"
 LOGOUT_REDIRECT_URL = "pages:home"
 
 # --------------------------------------------------------------------
@@ -146,6 +146,7 @@ LOGOUT_REDIRECT_URL = "pages:home"
 # --------------------------------------------------------------------
 SPS_SETTINGS = {
     "SITE_NAME": "ParkSmart Nepal",
+    "SITE_URL": "https://bimal.pythonanywhere.com",
     "SITE_TAGLINE": "Smart Parking System",
     "SUPPORT_PHONE": "+977-61-123456",
     "SUPPORT_PHONE_ALT": "+977-9800000000",
@@ -155,14 +156,22 @@ SPS_SETTINGS = {
     "SOCIAL_INSTAGRAM": "https://instagram.com/parksmartnepal",
     "SOCIAL_TWITTER": "https://twitter.com/parksmartnepal",
     "SOCIAL_LINKEDIN": "https://linkedin.com/company/parksmartnepal",
-    "GOOGLE_MAPS_API_KEY": os.environ.get("GOOGLE_MAPS_API_KEY", ""),
+    "GOOGLE_MAPS_API_KEY": os.environ.get("GOOGLE_MAPS_API_KEY", "AIzaSyAKQo4yx2Fnn4XnCVxej7t5N2eZ8-QAeUE"),
     "ESEWA_MERCHANT_CODE": os.environ.get("ESEWA_MERCHANT_CODE", "EPAYTEST"),
     "ESEWA_SUCCESS_URL": os.environ.get("ESEWA_SUCCESS_URL", ""),
     "ESEWA_FAILURE_URL": os.environ.get("ESEWA_FAILURE_URL", ""),
     "KHALTI_PUBLIC_KEY": os.environ.get("KHALTI_PUBLIC_KEY", ""),
     "KHALTI_SECRET_KEY": os.environ.get("KHALTI_SECRET_KEY", ""),
+    "ESEWA_PRODUCT_CODE": "EPAYTEST",
+    "ESEWA_SECRET_KEY": "8gBm/:&EnhH.1/q(",
     "CURRENCY_SYMBOL": "Rs.",
     "HOURLY_RATE_DEFAULT": 40,  # NPR per hour, fallback if a lot has none set
+    # Overstay / fine rules (change these numbers any time)
+    "OVERSTAY_GRACE_MINUTES": 10,          # free minutes after the booking ends
+    "OVERSTAY_FINE_AMOUNT": 20,            # Rs. charged per fine block
+    "OVERSTAY_FINE_INTERVAL_MINUTES": 30,  # length of one fine block
+    "EXPIRY_WARNING_MINUTES": 15,          # "parking expiring soon" alert
+    "CHECKIN_EARLY_MINUTES": 15,           # how early a user may check in
 }
 
 MESSAGE_TAGS = {
@@ -171,4 +180,104 @@ MESSAGE_TAGS = {
     25: "success",
     30: "warning",
     40: "danger",
+}
+
+# ---------------------------------------------------------------
+# ADMIN PORTAL (Jazzmin)
+# ---------------------------------------------------------------
+JAZZMIN_SETTINGS = {
+    "site_title": "ParkSmart Admin",
+    "site_header": "ParkSmart Nepal",
+    "site_brand": "ParkSmart",
+    "welcome_sign": "Welcome to ParkSmart Control Center",
+    "copyright": "ParkSmart Nepal",
+
+    # Global search box (top bar)
+    "search_model": ["auth.User", "reservations.Reservation", "payments.Payment"],
+
+    # Top navigation
+    "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "View Site", "url": "/", "new_window": True},
+        {"model": "reservations.Reservation"},
+        {"model": "payments.Payment"},
+    ],
+    "usermenu_links": [
+        {"name": "View Site", "url": "/", "new_window": True, "icon": "fas fa-globe"},
+        {"model": "auth.user"},
+    ],
+
+    # Sidebar
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": [
+        "reservations", "reservations.reservation", "reservations.notification",
+        "payments", "payments.payment",
+        "parking", "parking.parkinglot", "parking.parkingslot",
+        "accounts", "accounts.userprofile",
+        "auth",
+    ],
+
+    # Icons (FontAwesome 5)
+    "icons": {
+        "auth": "fas fa-shield-alt",
+        "auth.user": "fas fa-users",
+        "auth.Group": "fas fa-users-cog",
+        "accounts": "fas fa-id-card",
+        "accounts.userprofile": "fas fa-user-circle",
+        "parking": "fas fa-parking",
+        "parking.parkinglot": "fas fa-warehouse",
+        "parking.parkingslot": "fas fa-car",
+        "reservations": "fas fa-calendar-check",
+        "reservations.reservation": "fas fa-clipboard-list",
+        "reservations.notification": "fas fa-bell",
+        "payments": "fas fa-wallet",
+        "payments.payment": "fas fa-credit-card",
+        "pages": "fas fa-globe",
+        "pages.contactmessage": "fas fa-envelope",
+    },
+    "default_icon_parents": "fas fa-folder",
+    "default_icon_children": "fas fa-circle",
+
+    # Forms
+    "related_modal_active": True,          # add/edit related objects in a popup
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
+    "show_ui_builder": False,
+    "custom_css": "css/sps_admin.css",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-warning",
+    "navbar": "navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-warning",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",           # gives you a light/dark toggle
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
 }

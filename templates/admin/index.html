@@ -1,0 +1,37 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+{% if sps_stats %}
+<div class="row sps-kpis">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="sps-kpi navy">
+      <i class="icon fas fa-users"></i>
+      <div class="label">Users</div>
+      <div class="value">{{ sps_stats.users }}</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="sps-kpi blue">
+      <i class="icon fas fa-parking"></i>
+      <div class="label">Parking Lots / Slots</div>
+      <div class="value">{{ sps_stats.lots }} / {{ sps_stats.slots }}</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="sps-kpi amber">
+      <i class="icon fas fa-calendar-check"></i>
+      <div class="label">Reservations (Today: {{ sps_stats.reservations_today }})</div>
+      <div class="value">{{ sps_stats.reservations }}</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="sps-kpi green">
+      <i class="icon fas fa-wallet"></i>
+      <div class="label">Revenue ({{ sps_stats.payments_ok }} paid)</div>
+      <div class="value">Rs. {{ sps_stats.revenue|floatformat:0 }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

@@ -1,73 +1,329 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — {{ site.SITE_NAME }}{% endblock %}
+{% block title %}{{ site.SITE_NAME }} — {{ site.SITE_TAGLINE }}{% endblock %}
+
 {% block content %}
+<style>
+  /* ---------- Theme tokens (light default, dark via data-theme) ---------- */
+  .hp {
+    --hp-bg: #ffffff;
+    --hp-alt: #f4f6f8;
+    --hp-card: #ffffff;
+    --hp-border: #d3d9df;
+    --hp-title: #0f1720;
+    --hp-text: #33414f;
+    --hp-muted: #55677a;
+    --hp-accent: #1254a1;
+    --hp-accent-soft: #e8f2ff;
+    --hp-btn: #1769c2;
+    --hp-btn-hover: #1254a1;
+    --hp-hero-bg: linear-gradient(180deg, #f4f6f8 0%, #ffffff 100%);
+    --hp-free-bg: #e4f8ed;   --hp-free-tx: #1a7f4b;
+    --hp-busy-bg: #fdeaea;   --hp-busy-tx: #b93a3a;
+    --hp-resv-bg: #e8f2ff;   --hp-resv-tx: #1254a1;
+    background: var(--hp-bg);
+    color: var(--hp-text);
+  }
+  html[data-theme="dark"] .hp {
+    --hp-bg: #0b131d;
+    --hp-alt: #0e1826;
+    --hp-card: #142335;
+    --hp-border: #2a425f;
+    --hp-title: #ffffff;
+    --hp-text: #d3d9df;
+    --hp-muted: #aab6c4;
+    --hp-accent: #a8d0ff;
+    --hp-accent-soft: rgba(47, 128, 237, 0.18);
+    --hp-btn: #2f80ed;
+    --hp-btn-hover: #4d9aff;
+    --hp-hero-bg: linear-gradient(180deg, #0e1826 0%, #0b131d 100%);
+    --hp-free-bg: rgba(47, 190, 114, 0.16);  --hp-free-tx: #4fd68e;
+    --hp-busy-bg: rgba(239, 87, 87, 0.16);   --hp-busy-tx: #ff8a8a;
+    --hp-resv-bg: rgba(47, 128, 237, 0.2);   --hp-resv-tx: #a8d0ff;
+  }
 
-<section class="dashboard-header">
-  <div class="container-sps dashboard-header-inner">
-    <div>
-      <p class="dashboard-kicker">Parking dashboard</p>
-      <h1>Welcome back, {{ user.first_name|default:user.username }}.</h1>
-      <p>Manage reservations and find an available parking lot in Dhangadhi.</p>
+  /* ---------- Base ---------- */
+  .hp *, .hp *::before, .hp *::after { box-sizing: border-box; }
+  .hp h1, .hp h2, .hp h3 { color: var(--hp-title); margin: 0; }
+  .hp p { margin: 0; }
+  .hp-sec { padding: 80px 0; }
+  .hp-alt { background: var(--hp-alt); }
+  .hp-head { max-width: 640px; margin: 0 auto 44px; text-align: center; }
+  .hp-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--hp-accent); margin-bottom: 12px; }
+  .hp-h2 { font-size: 2rem; line-height: 1.2; margin-bottom: 12px !important; }
+  .hp-lead { color: var(--hp-muted); font-size: 1.02rem; line-height: 1.65; }
+
+  /* ---------- Buttons ---------- */
+  .hp-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 26px; border-radius: 8px; font-weight: 600; font-size: .95rem; border: 1.5px solid transparent; text-align: center; }
+  .hp-btn-primary { background: var(--hp-btn); color: #fff !important; }
+  .hp-btn-primary:hover { background: var(--hp-btn-hover); }
+  .hp-btn-outline { background: transparent; color: var(--hp-title) !important; border-color: var(--hp-border); }
+  .hp-btn-outline:hover { background: var(--hp-accent-soft); }
+  .hp-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ---------- Hero ---------- */
+  .hp-hero { background: var(--hp-hero-bg); padding: 84px 0 72px; border-bottom: 1px solid var(--hp-border); }
+  .hp-hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 52px; align-items: center; }
+  .hp-hero h1 { font-size: 2.9rem; line-height: 1.12; margin-bottom: 18px !important; letter-spacing: -0.02em; }
+  .hp-hero h1 span { color: var(--hp-accent); }
+  .hp-hero .hp-lead { font-size: 1.08rem; max-width: 520px; margin-bottom: 30px; }
+  .hp-trust { display: flex; gap: 10px 24px; flex-wrap: wrap; margin-top: 30px; font-size: .86rem; color: var(--hp-muted); }
+  .hp-trust b { color: var(--hp-title); font-weight: 600; }
+
+  /* Preview panel */
+  .hp-panel { background: var(--hp-card); border: 1px solid var(--hp-border); border-radius: 16px; padding: 22px; box-shadow: 0 14px 36px rgba(15, 23, 32, .10); }
+  .hp-panel-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .hp-panel-name { font-weight: 700; color: var(--hp-title); font-size: 1.05rem; }
+  .hp-panel-sub { font-size: .8rem; color: var(--hp-muted); }
+  .hp-pill { font-size: .72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--hp-free-bg); color: var(--hp-free-tx); white-space: nowrap; }
+  .hp-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+  .hp-slot { height: 38px; border-radius: 8px; font-size: .72rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .hp-free { background: var(--hp-free-bg); color: var(--hp-free-tx); }
+  .hp-busy { background: var(--hp-busy-bg); color: var(--hp-busy-tx); }
+  .hp-resv { background: var(--hp-resv-bg); color: var(--hp-resv-tx); }
+  .hp-legend { display: flex; gap: 8px 16px; flex-wrap: wrap; font-size: .78rem; color: var(--hp-muted); border-top: 1px dashed var(--hp-border); padding-top: 14px; }
+  .hp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  /* ---------- Stats strip ---------- */
+  .hp-strip { background: var(--hp-alt); border-bottom: 1px solid var(--hp-border); }
+  .hp-strip-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .hp-strip-item { padding: 26px 16px; text-align: center; border-right: 1px solid var(--hp-border); }
+  .hp-strip-item:last-child { border-right: 0; }
+  .hp-strip-item b { display: block; font-size: 1.5rem; color: var(--hp-title); line-height: 1.2; }
+  .hp-strip-item span { font-size: .84rem; color: var(--hp-muted); }
+
+  /* ---------- Cards ---------- */
+  .hp-card { background: var(--hp-card); border: 1px solid var(--hp-border); border-radius: 12px; padding: 26px; }
+  .hp-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .hp-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+  .hp-ico { width: 46px; height: 46px; border-radius: 10px; background: var(--hp-accent-soft); color: var(--hp-accent); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .hp-ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .hp-card h3 { font-size: 1.08rem; margin-bottom: 8px !important; }
+  .hp-card p { color: var(--hp-muted); font-size: .93rem; line-height: 1.6; }
+  .hp-step-no { font-size: 1.8rem; font-weight: 700; color: var(--hp-accent); margin-bottom: 10px; line-height: 1; }
+
+  /* ---------- Lots ---------- */
+  .hp-lot { display: block; background: var(--hp-card); border: 1px solid var(--hp-border); border-radius: 12px; padding: 22px; color: inherit; }
+  .hp-lot:hover { border-color: var(--hp-btn); }
+  .hp-lot-city { font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--hp-accent); margin-bottom: 8px; }
+  .hp-lot h3 { font-size: 1.1rem; margin-bottom: 6px !important; }
+  .hp-lot p { color: var(--hp-muted); font-size: .88rem; margin-bottom: 16px; min-height: 40px; }
+  .hp-lot-link { font-size: .88rem; font-weight: 600; color: var(--hp-accent); }
+  .hp-more { text-align: center; margin-top: 30px; }
+
+  /* ---------- Payments ---------- */
+  .hp-pay { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .hp-checks { list-style: none; padding: 0; margin: 22px 0 0; }
+  .hp-checks li { display: flex; gap: 12px; margin-bottom: 14px; font-size: .96rem; line-height: 1.5; color: var(--hp-text); }
+  .hp-checks li::before { content: "\2713"; flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--hp-free-bg); color: var(--hp-free-tx); font-weight: 700; font-size: .78rem; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .hp-methods { display: grid; gap: 14px; }
+  .hp-method { display: flex; align-items: center; gap: 16px; background: var(--hp-card); border: 1px solid var(--hp-border); border-radius: 12px; padding: 18px 20px; }
+  .hp-method b { display: block; color: var(--hp-title); }
+  .hp-method span { font-size: .86rem; color: var(--hp-muted); }
+  .hp-badge { flex: 0 0 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: .78rem; }
+  .hp-esewa { background: #4a9e34; }
+  .hp-khalti { background: #5d2e8e; }
+  .hp-cash { background: #33414f; }
+
+  /* ---------- Final CTA ---------- */
+  .hp-final { text-align: center; padding: 72px 0; border-top: 1px solid var(--hp-border); background: var(--hp-alt); }
+  .hp-final h2 { font-size: 2rem; margin-bottom: 12px !important; }
+  .hp-final p { max-width: 540px; margin: 0 auto 26px; color: var(--hp-muted); line-height: 1.6; }
+  .hp-final .hp-actions { justify-content: center; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 992px) {
+    .hp-hero-grid, .hp-pay { grid-template-columns: 1fr; gap: 40px; }
+    .hp-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .hp-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .hp-strip-grid { grid-template-columns: repeat(2, 1fr); }
+    .hp-strip-item:nth-child(2) { border-right: 0; }
+    .hp-strip-item:nth-child(-n+2) { border-bottom: 1px solid var(--hp-border); }
+  }
+  @media (max-width: 600px) {
+    .hp-sec { padding: 56px 0; }
+    .hp-hero { padding: 56px 0 48px; }
+    .hp-hero h1 { font-size: 2.1rem; }
+    .hp-h2, .hp-final h2 { font-size: 1.6rem; }
+    .hp-grid-3, .hp-grid-4 { grid-template-columns: 1fr; }
+    .hp-actions .hp-btn { width: 100%; }
+    .hp-panel { padding: 16px; }
+    .hp-strip-item b { font-size: 1.25rem; }
+  }
+</style>
+
+<div class="hp">
+
+  <!-- ================= HERO ================= -->
+  <section class="hp-hero">
+    <div class="container-sps hp-hero-grid">
+      <div>
+        <div class="hp-eyebrow">{{ site.SITE_TAGLINE }}</div>
+        <h1>Find, reserve and pay for parking <span>before you arrive.</span></h1>
+        <p class="hp-lead">{{ site.SITE_NAME }} shows which slots are free, lets you book one in seconds, and handles payment and receipts, so you spend less time circling and more time on your day.</p>
+        <div class="hp-actions">
+          <a href="{% url 'accounts:signup' %}" class="hp-btn hp-btn-primary">Create free account</a>
+          <a href="{% url 'parking:lot_list' %}" class="hp-btn hp-btn-outline">Browse parking lots</a>
+        </div>
+        <div class="hp-trust">
+          <span><b>eSewa</b> &middot; <b>Khalti</b> &middot; <b>Cash</b></span>
+          <span><b>Instant</b> PDF receipts</span>
+          <span><b>24/7</b> online booking</span>
+        </div>
+      </div>
+
+      <div class="hp-panel" role="img" aria-label="Sample parking lot slot availability">
+        <div class="hp-panel-top">
+          <div>
+            <div class="hp-panel-name">Sample parking lot</div>
+            <div class="hp-panel-sub">Example slot view &middot; Rs. {{ site.HOURLY_RATE_DEFAULT|default:"40" }}/hr</div>
+          </div>
+          <span class="hp-pill">12 free</span>
+        </div>
+        <div class="hp-slots">
+          <div class="hp-slot hp-busy">A1</div><div class="hp-slot hp-free">A2</div><div class="hp-slot hp-free">A3</div><div class="hp-slot hp-resv">A4</div><div class="hp-slot hp-busy">A5</div>
+          <div class="hp-slot hp-free">B1</div><div class="hp-slot hp-busy">B2</div><div class="hp-slot hp-free">B3</div><div class="hp-slot hp-free">B4</div><div class="hp-slot hp-resv">B5</div>
+          <div class="hp-slot hp-busy">C1</div><div class="hp-slot hp-free">C2</div><div class="hp-slot hp-busy">C3</div><div class="hp-slot hp-free">C4</div><div class="hp-slot hp-free">C5</div>
+          <div class="hp-slot hp-free">D1</div><div class="hp-slot hp-resv">D2</div><div class="hp-slot hp-free">D3</div><div class="hp-slot hp-busy">D4</div><div class="hp-slot hp-free">D5</div>
+        </div>
+        <div class="hp-legend">
+          <span><i style="background:var(--hp-free-tx)"></i>Available</span>
+          <span><i style="background:var(--hp-busy-tx)"></i>Occupied</span>
+          <span><i style="background:var(--hp-resv-tx)"></i>Reserved</span>
+        </div>
+      </div>
     </div>
-    <a href="{% url 'parking:lot_list' %}" class="btn-sps-amber">Find parking</a>
-  </div>
-</section>
+  </section>
 
-<section class="section dashboard-content">
-  <div class="container-sps">
-    <div class="dashboard-stats">
-      <div class="dashboard-stat"><span>Available lots</span><strong>{{ stats.total_lots }}</strong></div>
-      <div class="dashboard-stat"><span>Location</span><strong>Dhangadhi</strong></div>
-      <div class="dashboard-stat"><span>Booking access</span><strong>24/7</strong></div>
+  <!-- ================= STATS ================= -->
+  <section class="hp-strip">
+    <div class="container-sps hp-strip-grid">
+      <div class="hp-strip-item"><b>{{ stats.total_lots|default:"0" }}</b><span>Parking lots</span></div>
+      <div class="hp-strip-item"><b>{{ stats.total_cities|default:"0" }}</b><span>Cities covered</span></div>
+      <div class="hp-strip-item"><b>3</b><span>Payment options</span></div>
+      <div class="hp-strip-item"><b>PDF</b><span>Receipt for every payment</span></div>
     </div>
+  </section>
 
-    <div class="dashboard-section-heading">
-      <div><p class="dashboard-kicker">Your account</p><h2>Recent reservations</h2></div>
-      <a href="{% url 'reservations:my_bookings' %}" class="dashboard-link">View all reservations</a>
+  <!-- ================= FEATURES ================= -->
+  <section class="hp-sec">
+    <div class="container-sps">
+      <div class="hp-head">
+        <div class="hp-eyebrow">Why {{ site.SITE_NAME }}</div>
+        <h2 class="hp-h2">Everything you need for stress-free parking</h2>
+        <p class="hp-lead">One platform that covers the whole journey, from finding a slot to getting your receipt.</p>
+      </div>
+      <div class="hp-grid-3">
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <h3>Find nearby lots</h3>
+          <p>Browse parking lots by city, compare rates and see which slots are open before you leave.</p>
+        </div>
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <h3>Reserve a slot</h3>
+          <p>Pick a time, choose a slot and confirm in a few clicks. Every booking is saved to your account.</p>
+        </div>
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <h3>Easy check-in</h3>
+          <p>Check in when you arrive and your session is tracked from the moment you park.</p>
+        </div>
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <h3>Fair overstay rules</h3>
+          <p>A grace period applies before any fine, and expiry alerts keep you from being caught off guard.</p>
+        </div>
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <h3>Loyalty rewards</h3>
+          <p>Earn points on every session and redeem them at checkout to lower your parking bill.</p>
+        </div>
+        <div class="hp-card">
+          <div class="hp-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <h3>Clear billing</h3>
+          <p>Each payment produces a PDF receipt, and your full booking history stays in one place.</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    {% if reservations %}
-      <div class="reservation-list">
-        {% for reservation in reservations %}
-          <a href="{% url 'reservations:detail' reservation.reference %}" class="reservation-item">
-            <div>
-              <strong>{{ reservation.lot.name }}</strong>
-              <span>{{ reservation.start_time|date:"d M Y, g:i A" }} &middot; Slot {{ reservation.slot.slot_number|default:"—" }}</span>
-            </div>
-            <div class="reservation-item-status">
-              <strong>Rs. {{ reservation.total_amount }}</strong>
-              <span class="badge-status badge-{{ reservation.status }}">{{ reservation.get_status_display }}</span>
-            </div>
-          </a>
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="hp-sec hp-alt">
+    <div class="container-sps">
+      <div class="hp-head">
+        <div class="hp-eyebrow">How it works</div>
+        <h2 class="hp-h2">From search to receipt in four steps</h2>
+        <p class="hp-lead">No queues and no guesswork, just a simple flow that works the same every time.</p>
+      </div>
+      <div class="hp-grid-4">
+        <div class="hp-card"><div class="hp-step-no">01</div><h3>Search a lot</h3><p>Choose your city and pick a parking lot that suits your trip.</p></div>
+        <div class="hp-card"><div class="hp-step-no">02</div><h3>Reserve your slot</h3><p>Select a free slot and your parking time, then confirm the booking.</p></div>
+        <div class="hp-card"><div class="hp-step-no">03</div><h3>Check in &amp; park</h3><p>Arrive, check in, and park knowing your slot is already yours.</p></div>
+        <div class="hp-card"><div class="hp-step-no">04</div><h3>Pay &amp; get receipt</h3><p>Pay online or in cash and download your PDF receipt.</p></div>
+      </div>
+    </div>
+  </section>
+
+  {% if featured_lots %}
+  <!-- ================= FEATURED LOTS ================= -->
+  <section class="hp-sec">
+    <div class="container-sps">
+      <div class="hp-head">
+        <div class="hp-eyebrow">Parking lots</div>
+        <h2 class="hp-h2">Available locations</h2>
+        <p class="hp-lead">Open a lot to see its slots, rates and features.</p>
+      </div>
+      <div class="hp-grid-3">
+        {% for lot in featured_lots %}
+        <a href="{% url 'parking:lot_detail' lot.slug %}" class="hp-lot">
+          <div class="hp-lot-city">{{ lot.city }}</div>
+          <h3>{{ lot.name }}</h3>
+          <p>{{ lot.address|default:""|truncatechars:70 }}</p>
+          <span class="hp-lot-link">View details &rarr;</span>
+        </a>
         {% endfor %}
       </div>
-    {% else %}
-      <div class="dashboard-empty">
-        <h3>No reservations yet</h3>
-        <p>Choose a parking lot to make your first reservation.</p>
-        <a href="{% url 'parking:lot_list' %}" class="btn-sps-amber">Find parking</a>
+      <div class="hp-more">
+        <a href="{% url 'parking:lot_list' %}" class="hp-btn hp-btn-outline">See all parking lots</a>
       </div>
-    {% endif %}
-
-    <div class="dashboard-section-heading lots-heading">
-      <div><p class="dashboard-kicker">Dhangadhi parking</p><h2>Find an available lot</h2></div>
-      <a href="{% url 'parking:lot_list' %}" class="dashboard-link">Browse all lots</a>
     </div>
+  </section>
+  {% endif %}
 
-    <div class="dashboard-lot-grid">
-      {% for lot in lots %}
-        <a href="{{ lot.get_absolute_url }}" class="dashboard-lot">
-          <div class="dashboard-lot-top">
-            <span class="dashboard-lot-city">{{ lot.get_city_display }}</span>
-            {% if lot.available_slots_count > 0 %}<span class="availability-pill free">{{ lot.available_slots_count }} open</span>{% else %}<span class="availability-pill full">Full</span>{% endif %}
-          </div>
-          <h3>{{ lot.name }}</h3>
-          <p>{{ lot.address }}</p>
-          <span class="dashboard-lot-action">View lot details</span>
-        </a>
-      {% endfor %}
+  <!-- ================= PAYMENTS ================= -->
+  <section class="hp-sec {% if featured_lots %}hp-alt{% endif %}">
+    <div class="container-sps hp-pay">
+      <div>
+        <div class="hp-eyebrow">Payments</div>
+        <h2 class="hp-h2">Pay the way you already do</h2>
+        <p class="hp-lead">Local payment options are built in, so you never need a card to park.</p>
+        <ul class="hp-checks">
+          <li>Verified eSewa and Khalti payment confirmation</li>
+          <li>Cash option for walk-in customers</li>
+          <li>PDF receipt for every completed payment</li>
+          <li>Complete payment history in your dashboard</li>
+        </ul>
+      </div>
+      <div class="hp-methods">
+        <div class="hp-method"><div class="hp-badge hp-esewa">eSewa</div><div><b>eSewa wallet</b><span>Pay instantly from your eSewa account</span></div></div>
+        <div class="hp-method"><div class="hp-badge hp-khalti">Khalti</div><div><b>Khalti wallet</b><span>Fast, secure checkout with Khalti</span></div></div>
+        <div class="hp-method"><div class="hp-badge hp-cash">Cash</div><div><b>Pay at the lot</b><span>Settle in cash with the parking attendant</span></div></div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <!-- ================= FINAL CTA ================= -->
+  <section class="hp-final">
+    <div class="container-sps">
+      <h2>Ready to park smarter?</h2>
+      <p>Create your free account and book your first parking slot in under a minute.</p>
+      <div class="hp-actions">
+        <a href="{% url 'accounts:signup' %}" class="hp-btn hp-btn-primary">Create free account</a>
+        <a href="{% url 'accounts:login' %}" class="hp-btn hp-btn-outline">Sign in</a>
+        <a href="{% url 'pages:contact' %}" class="hp-btn hp-btn-outline">Contact us</a>
+      </div>
+    </div>
+  </section>
+
+</div>
 {% endblock %}

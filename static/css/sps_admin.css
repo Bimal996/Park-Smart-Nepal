@@ -1,0 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap");
+
+body, .content-wrapper, .main-sidebar { font-family: "Inter", sans-serif; }
+h1, h2, h3, .brand-text, .content-header h1 { font-family: "Space Grotesk", sans-serif; }
+
+/* Cards */
+.card { border-radius: 12px; box-shadow: 0 2px 10px rgba(15, 23, 42, .08); border: 0; }
+.card-header { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+
+/* Tables */
+#result_list tbody tr:hover { background: rgba(245, 158, 11, .08); }
+#result_list thead th { text-transform: uppercase; font-size: .75rem; letter-spacing: .04em; }
+
+/* Status badges */
+.sps-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: .75rem; font-weight: 600; white-space: nowrap;
+}
+.sps-green { background: #dcfce7; color: #166534; }
+.sps-amber { background: #fef3c7; color: #92400e; }
+.sps-red   { background: #fee2e2; color: #991b1b; }
+.sps-blue  { background: #dbeafe; color: #1e40af; }
+.sps-gray  { background: #e5e7eb; color: #374151; }
+
+/* Dashboard KPI cards */
+.sps-kpis .sps-kpi {
+  border-radius: 14px; padding: 18px 20px; color: #fff; margin-bottom: 18px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .15);
+}
+.sps-kpi .label { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; opacity: .85; }
+.sps-kpi .value { font-family: "Space Grotesk", sans-serif; font-size: 1.9rem; font-weight: 700; line-height: 1.2; }
+.sps-kpi .icon  { float: right; font-size: 2rem; opacity: .35; }
+.sps-kpi.navy   { background: linear-gradient(135deg, #0f172a, #1e3a5f); }
+.sps-kpi.amber  { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.sps-kpi.green  { background: linear-gradient(135deg, #15803d, #22c55e); }
+.sps-kpi.blue   { background: linear-gradient(135deg, #1d4ed8, #3b82f6); }
